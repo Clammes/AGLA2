@@ -1,55 +1,54 @@
-import numpy as np
+import sympy as sp
 
 
-def matrix_spaces(A):
-    A = np.array(A, dtype=float)
-    m, n = A.shape
-    U, sigma, Vt = np.linalg.svd(A, full_matrices=True)
-    V = Vt.T
-    tol = max(m, n) * np.max(sigma) * np.finfo(float).eps
-    rank = np.sum(sigma > tol)
-    col_space = U[:, :rank]
-    row_space = V[:, :rank]
-    null_space = V[:, rank:] if rank < n else np.array([]).reshape(n, 0)
-    row_null_space = U[:, rank:] if rank < m else np.array([]).reshape(m, 0)
+def format_vectors(vectors):
+    if not vectors:
+        return "empty"
+
+    formatted = []
+    for vec in vectors:
+        elements = [sp.nsimplify(x) for x in vec]
+        formatted.append(f"[{', '.join(map(str, elements))}]")
+    return "\n".join(formatted)
+
+
+def matrix_spaces(matrix):
+    A = sp.Matrix(matrix)
     return {
-        'column_space': col_space,
-        'row_space': row_space,
-        'null_space': null_space,
-        'row_null_space': row_null_space,
-        'rank': rank
+        'column_space': A.columnspace(),
+        'row_space': A.rowspace(),
+        'null_space': A.nullspace(),
+        'left_null_space': A.T.nullspace()
     }
 
 
-def format_matrix(M):
-    if M.size == 0:
-        return "Empty"
-    rows = [''.join([f"{x:8.4f}" for x in row]) for row in M]
-    return '\n'.join([f"| {row} |" for row in rows])
+def input_matrix():
+    rows = int(input("Enter the number of rows: "))
+    cols = int(input("Enter the number of columns: "))
+    matrix = []
+    for i in range(rows):
+        row = list(map(float, input(f"Enter row {i + 1} (numbers separated by spaces): ").split()))
+        if len(row) != cols:
+            raise ValueError("Number of elements in the row does not match the number of columns!")
+        matrix.append(row)
+    return matrix
 
 
-if __name__ == "__main__":
-    m = int(input("Enter number of rows: "))
-    n = int(input("Enter number of columns: "))
-    print(f"Enter {m}x{n} matrix elements row by row (space-separated):")
-    A = []
-    for i in range(m):
-        row = list(map(float, input().split()))
-        if len(row) != n:
-            print(f"Expected {n} elements, got {len(row)}")
-            exit(1)
-        A.append(row)
-    A = np.array(A)
-    spaces = matrix_spaces(A)
+try:
+    matrix = input_matrix()
+    spaces = matrix_spaces(matrix)
 
-    print("\nInput Matrix:")
-    print(format_matrix(A))
-    print("\nRank:", spaces['rank'])
     print("\nColumn Space Basis:")
-    print(format_matrix(spaces['column_space']))
+    print(format_vectors(spaces['column_space']))
+
     print("\nRow Space Basis:")
-    print(format_matrix(spaces['row_space']))
+    print(format_vectors(spaces['row_space']))
+
     print("\nNull Space Basis:")
-    print(format_matrix(spaces['null_space']))
-    print("\nRow Null Space Basis:")
-    print(format_matrix(spaces['row_null_space']))
+    print(format_vectors(spaces['null_space']))
+
+    print("\nLeft Null Space Basis:")
+    print(format_vectors(spaces['left_null_space']))
+
+except Exception as e:
+    print(f"Error: {str(e)}")
