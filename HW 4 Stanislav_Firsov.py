@@ -1,4 +1,4 @@
-import sympy as sp #Скачать через терминал, если нет библиотеки - pip install sympy
+import sympy as sp
 
 A = sp.Matrix([
     [1, 2, 1],
